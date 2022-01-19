@@ -1,7 +1,14 @@
+from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import filters
+from rest_framework.generics import ListAPIView
 from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 from rest_framework import status
 import math
 
@@ -20,6 +27,10 @@ class student_list(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -46,14 +57,13 @@ def student_details(request, pk):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class student_list(APIView):
+class student_LIST(APIView):
     def get(self, request):
         s = request.GET.get('s')
         sort = request.GET.get('sort')
         page = int(request.GET.get('page', 1))
         per_page = 32
         students = student.objects.all()
-        
 
         if s:
             students = students.filter(Q(gender__icontains=s) | Q(email__icontains=s))
@@ -74,5 +84,7 @@ class student_list(APIView):
                          'last_page': math.ceil(total / per_page),
                          })
 
-
-
+class student_filter(ListAPIView):
+        queryset = student.objects.all()
+        serializer_class = StudentSerializer
+        filterset_fields = ['gender', 'email']
