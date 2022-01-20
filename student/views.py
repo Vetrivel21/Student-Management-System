@@ -1,17 +1,10 @@
-from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import filters
 from rest_framework.generics import ListAPIView
 from django.db.models import Q
-from rest_framework.pagination import PageNumberPagination
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 from rest_framework import status
 import math
-
 from .models import student
 from .serializers import StudentSerializer
 
@@ -28,36 +21,6 @@ class student_list(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def student_details(request, pk):
-    try:
-        students = student.objects.get(pk=pk)
-    except student.DoesNotExist:
-        error = {'status':'400', 'message':'NOT FOUND'}
-        return Response(error, status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = StudentSerializer(students)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = StudentSerializer(students, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        students.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class student_LIST(APIView):
     def get(self, request):
         s = request.GET.get('s')
         sort = request.GET.get('sort')
@@ -84,7 +47,30 @@ class student_LIST(APIView):
                          'last_page': math.ceil(total / per_page),
                          })
 
+@api_view(['GET', 'PUT', 'DELETE'])
+def student_details(request, pk):
+    try:
+        students = student.objects.get(pk=pk)
+    except student.DoesNotExist:
+        error = {'status':'400', 'message':'NOT FOUND'}
+        return Response(error, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = StudentSerializer(students)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = StudentSerializer(students, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        students.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class student_filter(ListAPIView):
-        queryset = student.objects.all()
-        serializer_class = StudentSerializer
-        filterset_fields = ['gender', 'email']
+    queryset = student.objects.all()
+    serializer_class = StudentSerializer
+    filterset_fields = ['gender', 'email']
